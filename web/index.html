@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base href="$FLUTTER_BASE_HREF">
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="Abhimanyu Kumar - Senior Flutter & Android Developer Portfolio">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="AK Portfolio">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <title>Abhimanyu Kumar — Flutter &amp; Android Developer</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    body {
+      background-color: #060610;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+    #loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background: #060610;
+      font-family: 'JetBrains Mono', monospace;
+      color: #00d4ff;
+    }
+    .loader-text {
+      font-size: 14px;
+      letter-spacing: 0.15em;
+      animation: pulse 1.5s infinite;
+    }
+    .loader-bar {
+      width: 200px;
+      height: 2px;
+      background: rgba(0,212,255,0.15);
+      border-radius: 2px;
+      margin-top: 20px;
+      overflow: hidden;
+    }
+    .loader-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #00d4ff, #00ff88);
+      animation: load 2s ease-in-out forwards;
+    }
+    @keyframes load { from { width: 0% } to { width: 100% } }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  </style>
+</head>
+<body>
+  <div id="loading">
+    <div class="loader-text">$ flutter run --release</div>
+    <div class="loader-bar"><div class="loader-fill"></div></div>
+  </div>
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>
