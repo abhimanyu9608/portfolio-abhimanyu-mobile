@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 import '../theme/app_theme.dart';
 
 class SectionHeader extends StatelessWidget {
@@ -86,6 +87,64 @@ class _TechTagState extends State<TechTag> {
                 : AppTheme.textSecondary,
           ),
         ),
+      ),
+    );
+  }
+}
+
+class RevealOnScroll extends StatefulWidget {
+  final Widget child;
+  final Duration delay;
+  final Offset slideFrom;
+  const RevealOnScroll({
+    super.key,
+    required this.child,
+    this.delay = Duration.zero,
+    this.slideFrom = const Offset(0, 0.12),
+  });
+
+  @override
+  State<RevealOnScroll> createState() => _RevealOnScrollState();
+}
+
+class _RevealOnScrollState extends State<RevealOnScroll>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+  late Animation<double> _opacity;
+  late Animation<Offset> _slide;
+  bool _triggered = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 600));
+    _opacity = CurvedAnimation(parent: _ctrl, curve: Curves.easeOut);
+    _slide = Tween<Offset>(begin: widget.slideFrom, end: Offset.zero)
+        .animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return VisibilityDetector(
+      key: Key('reveal_${widget.hashCode}'),
+      onVisibilityChanged: (info) {
+        if (info.visibleFraction > 0.08 && !_triggered) {
+          _triggered = true;
+          Future.delayed(widget.delay, () {
+            if (mounted) _ctrl.forward();
+          });
+        }
+      },
+      child: FadeTransition(
+        opacity: _opacity,
+        child: SlideTransition(position: _slide, child: widget.child),
       ),
     );
   }

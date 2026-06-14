@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../theme/app_theme.dart';
 import '../widgets/common_widgets.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 
 // ─── SKILLS ───────────────────────────────────────────────────────────────────
 class SkillsSection extends StatelessWidget {
@@ -29,12 +30,12 @@ class SkillsSection extends StatelessWidget {
             spacing: 16,
             runSpacing: 16,
             children: skills.asMap().entries.map((e) {
-              return SizedBox(
-                width: _cardWidth(w),
-                child: _SkillCard(data: e.value)
-                    .animate(delay: (e.key * 80).ms)
-                    .fadeIn(duration: 500.ms)
-                    .slideY(begin: 0.3, end: 0),
+              return RevealOnScroll(
+                delay: Duration(milliseconds: e.key * 80),
+                child: SizedBox(
+                  width: _cardWidth(w),
+                  child: _SkillCard(data: e.value),
+                ),
               );
             }).toList(),
           ),
@@ -122,8 +123,91 @@ class _SkillCardState extends State<_SkillCard> {
                 );
               }).toList(),
             ),
+            if ((widget.data['progress'] as double?) != null) ...[
+              const SizedBox(height: 14),
+              _SkillProgressBar(progress: widget.data['progress'] as double),
+            ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _SkillProgressBar extends StatefulWidget {
+  final double progress;
+  const _SkillProgressBar({required this.progress});
+
+  @override
+  State<_SkillProgressBar> createState() => _SkillProgressBarState();
+}
+
+class _SkillProgressBarState extends State<_SkillProgressBar> {
+  bool _visible = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return VisibilityDetector(
+      key: Key('skill_bar_${widget.progress}'),
+      onVisibilityChanged: (info) {
+        if (info.visibleFraction > 0.3 && !_visible) {
+          setState(() => _visible = true);
+        }
+      },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('proficiency',
+                  style: GoogleFonts.jetBrainsMono(
+                      fontSize: 8, color: AppTheme.textMuted)),
+              TweenAnimationBuilder<double>(
+                tween: Tween(
+                    begin: 0,
+                    end: _visible ? widget.progress * 100 : 0),
+                duration: const Duration(milliseconds: 1200),
+                curve: Curves.easeOut,
+                builder: (_, val, __) => Text(
+                  '${val.toInt()}%',
+                  style: GoogleFonts.jetBrainsMono(
+                      fontSize: 8, color: AppTheme.accent),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 5),
+          Container(
+            height: 3,
+            decoration: BoxDecoration(
+              color: AppTheme.bg3,
+              borderRadius: BorderRadius.circular(2),
+            ),
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(
+                  begin: 0, end: _visible ? widget.progress : 0),
+              duration: const Duration(milliseconds: 1200),
+              curve: Curves.easeOut,
+              builder: (_, val, __) => FractionallySizedBox(
+                widthFactor: val,
+                alignment: Alignment.centerLeft,
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                        colors: [AppTheme.accent, AppTheme.green]),
+                    borderRadius: BorderRadius.circular(2),
+                    boxShadow: [
+                      BoxShadow(
+                          color: AppTheme.accent.withOpacity(0.4),
+                          blurRadius: 6)
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -152,14 +236,15 @@ class ExperienceSection extends StatelessWidget {
           const SizedBox(height: 40),
           ...exps.asMap().entries.map((e) {
             final isLast = e.key == exps.length - 1;
-            return _ExpItem(
-              data: e.value,
-              isFirst: e.key == 0,
-              isLast: isLast,
-            )
-                .animate(delay: (e.key * 100).ms)
-                .fadeIn(duration: 500.ms)
-                .slideX(begin: 0.1, end: 0);
+            return RevealOnScroll(
+              delay: Duration(milliseconds: e.key * 100),
+              slideFrom: const Offset(0.05, 0),
+              child: _ExpItem(
+                data: e.value,
+                isFirst: e.key == 0,
+                isLast: isLast,
+              ),
+            );
           }),
         ],
       ),
@@ -420,12 +505,12 @@ class AppsSection extends StatelessWidget {
             runSpacing: 16,
             children: apps.asMap().entries.map((e) {
               final color = _accentColors[e.key % _accentColors.length];
-              return SizedBox(
-                width: _cardWidth(w),
-                child: _AppCard(data: e.value, accentColor: color)
-                    .animate(delay: (e.key * 70).ms)
-                    .fadeIn(duration: 500.ms)
-                    .slideY(begin: 0.3, end: 0),
+              return RevealOnScroll(
+                delay: Duration(milliseconds: (e.key % 6) * 70),
+                child: SizedBox(
+                  width: _cardWidth(w),
+                  child: _AppCard(data: e.value, accentColor: color),
+                ),
               );
             }).toList(),
           ),
@@ -452,16 +537,40 @@ class _AppCard extends StatefulWidget {
 
 class _AppCardState extends State<_AppCard> {
   bool _hovered = false;
+  double _tiltX = 0;
+  double _tiltY = 0;
+
+  void _onHover(PointerEvent event) {
+    final box = context.findRenderObject() as RenderBox?;
+    if (box == null) return;
+    final local = box.globalToLocal(event.position);
+    final size = box.size;
+    setState(() {
+      _tiltX = -(local.dy / size.height - 0.5) * 0.12;
+      _tiltY = (local.dx / size.width - 0.5) * 0.12;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        padding: const EdgeInsets.all(24),
-        transform: Matrix4.translationValues(0, _hovered ? -6 : 0, 0),
+      onExit: (_) => setState(() {
+        _hovered = false;
+        _tiltX = 0;
+        _tiltY = 0;
+      }),
+      onHover: _onHover,
+      child: Transform(
+        alignment: Alignment.center,
+        transform: Matrix4.identity()
+          ..setEntry(3, 2, 0.001)
+          ..rotateX(_tiltX)
+          ..rotateY(_tiltY),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          padding: const EdgeInsets.all(24),
+          transform: Matrix4.translationValues(0, _hovered ? -6 : 0, 0),
         decoration: BoxDecoration(
           color: AppTheme.surface,
           borderRadius: BorderRadius.circular(16),
@@ -598,6 +707,7 @@ class _AppCardState extends State<_AppCard> {
               ),
             ],
           ],
+        ),
         ),
       ),
     );
@@ -1004,6 +1114,578 @@ class _ContactLink extends StatefulWidget {
 
   @override
   State<_ContactLink> createState() => _ContactLinkState();
+}
+
+// ─── PROCESS ──────────────────────────────────────────────────────────────────
+class ProcessSection extends StatelessWidget {
+  const ProcessSection({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final w = MediaQuery.of(context).size.width;
+    final isMobile = w < 800;
+    final steps = AppData.process;
+
+    return Container(
+      color: AppTheme.bg2,
+      padding: EdgeInsets.symmetric(horizontal: w * 0.06, vertical: 100),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          RevealOnScroll(
+            child: const SectionHeader(number: '→', title: 'How I Build'),
+          ),
+          const SizedBox(height: 48),
+          if (isMobile)
+            Column(
+              children: steps.asMap().entries.map((e) {
+                return RevealOnScroll(
+                  delay: Duration(milliseconds: e.key * 100),
+                  child: _ProcessStep(
+                      data: e.value, isLast: e.key == steps.length - 1),
+                );
+              }).toList(),
+            )
+          else
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: steps.asMap().entries.map((e) {
+                return Expanded(
+                  child: RevealOnScroll(
+                    delay: Duration(milliseconds: e.key * 100),
+                    child: _ProcessStep(
+                        data: e.value,
+                        isLast: e.key == steps.length - 1,
+                        horizontal: true),
+                  ),
+                );
+              }).toList(),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProcessStep extends StatefulWidget {
+  final Map<String, dynamic> data;
+  final bool isLast;
+  final bool horizontal;
+
+  const _ProcessStep(
+      {required this.data, required this.isLast, this.horizontal = false});
+
+  @override
+  State<_ProcessStep> createState() => _ProcessStepState();
+}
+
+class _ProcessStepState extends State<_ProcessStep> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final tags = List<String>.from(widget.data['tags'] ?? []);
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: Padding(
+        padding: widget.horizontal
+            ? const EdgeInsets.only(right: 12)
+            : const EdgeInsets.only(bottom: 16),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.all(22),
+          decoration: BoxDecoration(
+            color: _hovered ? AppTheme.surface2 : AppTheme.surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: _hovered ? AppTheme.border2 : AppTheme.border,
+            ),
+            boxShadow: _hovered
+                ? [
+                    BoxShadow(
+                        color: AppTheme.accent.withOpacity(0.06),
+                        blurRadius: 24)
+                  ]
+                : [],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  Text(widget.data['step'] ?? '',
+                      style: GoogleFonts.jetBrainsMono(
+                          fontSize: 10, color: AppTheme.accent)),
+                  const Spacer(),
+                  Text(widget.data['icon'] ?? '',
+                      style: const TextStyle(fontSize: 20)),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Text(
+                widget.data['title'] ?? '',
+                style: GoogleFonts.syne(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.textPrimary),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                widget.data['desc'] ?? '',
+                style: GoogleFonts.syne(
+                    fontSize: 12,
+                    color: AppTheme.textSecondary,
+                    height: 1.65),
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 5,
+                runSpacing: 5,
+                children: tags
+                    .map((t) => Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: AppTheme.accentDim,
+                            borderRadius: BorderRadius.circular(3),
+                            border: Border.all(color: AppTheme.border2),
+                          ),
+                          child: Text(t,
+                              style: GoogleFonts.jetBrainsMono(
+                                  fontSize: 9, color: AppTheme.accent)),
+                        ))
+                    .toList(),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── PHONE SHOWCASE ───────────────────────────────────────────────────────────
+class PhoneShowcaseSection extends StatefulWidget {
+  const PhoneShowcaseSection({super.key});
+
+  @override
+  State<PhoneShowcaseSection> createState() => _PhoneShowcaseSectionState();
+}
+
+class _PhoneShowcaseSectionState extends State<PhoneShowcaseSection>
+    with TickerProviderStateMixin {
+  late PageController _pageCtrl;
+  late AnimationController _autoCtrl;
+  int _currentPage = 0;
+
+  static const _screens = [
+    {
+      'name': 'Capricorn Customer App',
+      'category': 'Fintech · DSC · KYC',
+      'icon': '📋',
+      'color': 0xFF00D4FF,
+      'stat': '50K+ users · 4.4★',
+      'tags': ['Flutter', 'BLoC', 'RazorPay'],
+    },
+    {
+      'name': 'eSign.Digital',
+      'category': 'Digital Identity · Aadhaar',
+      'icon': '✍️',
+      'color': 0xFF00FF88,
+      'stat': '20K+ enterprise users',
+      'tags': ['Biometric', 'Face Auth', 'IT Act'],
+    },
+    {
+      'name': 'AuthTech Authenticator',
+      'category': 'Security · 2FA · MFA',
+      'icon': '🔐',
+      'color': 0xFFFFAA00,
+      'stat': 'Enterprise · Google Play',
+      'tags': ['2FA', 'Biometric', 'TOTP'],
+    },
+    {
+      'name': 'My Menu',
+      'category': 'Food & Restaurant',
+      'icon': '🍽️',
+      'color': 0xFFFF4488,
+      'stat': 'QR Scan · Dine-in · Takeaway',
+      'tags': ['Maps', 'QR', 'Ordering'],
+    },
+    {
+      'name': 'SDSS',
+      'category': 'Android TV · Digital Signage',
+      'icon': '🖥️',
+      'color': 0xFFAA44FF,
+      'stat': 'ExoPlayer · Scheduled Playlists',
+      'tags': ['Android TV', 'ExoPlayer', 'Leanback'],
+    },
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _pageCtrl = PageController();
+    _autoCtrl =
+        AnimationController(vsync: this, duration: const Duration(seconds: 3))
+          ..addStatusListener((s) {
+            if (s == AnimationStatus.completed && mounted) {
+              final next = (_currentPage + 1) % _screens.length;
+              _pageCtrl.animateToPage(next,
+                  duration: const Duration(milliseconds: 500),
+                  curve: Curves.easeInOut);
+              setState(() => _currentPage = next);
+              _autoCtrl.reset();
+              _autoCtrl.forward();
+            }
+          });
+    _autoCtrl.forward();
+  }
+
+  @override
+  void dispose() {
+    _pageCtrl.dispose();
+    _autoCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final w = MediaQuery.of(context).size.width;
+    final isMobile = w < 900;
+
+    return Container(
+      color: AppTheme.bg,
+      padding: EdgeInsets.symmetric(horizontal: w * 0.06, vertical: 80),
+      child: isMobile
+          ? Column(mainAxisSize: MainAxisSize.min, children: [
+              _buildLabel(),
+              const SizedBox(height: 48),
+              _buildPhone(w),
+            ])
+          : Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(flex: 5, child: _buildLabel()),
+                const SizedBox(width: 40),
+                Expanded(flex: 4, child: Center(child: _buildPhone(w))),
+              ],
+            ),
+    );
+  }
+
+  Widget _buildLabel() {
+    return RevealOnScroll(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('// showcase',
+              style: GoogleFonts.jetBrainsMono(
+                  fontSize: 11, color: AppTheme.accent, letterSpacing: 0.1)),
+          const SizedBox(height: 12),
+          ShaderMask(
+            shaderCallback: (b) => const LinearGradient(
+              colors: [Colors.white, AppTheme.accent],
+            ).createShader(b),
+            child: Text(
+              'Apps That\nShip & Scale',
+              style: GoogleFonts.syne(
+                  fontSize: 36,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                  height: 1.1),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            '8 years of production mobile apps — fintech, digital identity, e-commerce, entertainment and enterprise.',
+            style: GoogleFonts.syne(
+                fontSize: 14,
+                color: AppTheme.textSecondary,
+                height: 1.8),
+          ),
+          const SizedBox(height: 24),
+          // Dot indicators
+          Row(
+            children: List.generate(_screens.length, (i) {
+              return GestureDetector(
+                onTap: () {
+                  _pageCtrl.animateToPage(i,
+                      duration: const Duration(milliseconds: 400),
+                      curve: Curves.easeInOut);
+                  setState(() => _currentPage = i);
+                  _autoCtrl.reset();
+                  _autoCtrl.forward();
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  margin: const EdgeInsets.only(right: 8),
+                  width: i == _currentPage ? 24 : 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: i == _currentPage
+                        ? AppTheme.accent
+                        : AppTheme.textMuted,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+              );
+            }),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPhone(double w) {
+    const phoneW = 240.0;
+    const phoneH = 480.0;
+
+    return RevealOnScroll(
+      slideFrom: const Offset(0, 0.1),
+      child: SizedBox(
+        width: phoneW + 40,
+        height: phoneH + 40,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            // Glow behind phone
+            Container(
+              width: phoneW,
+              height: phoneH,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(36),
+                boxShadow: [
+                  BoxShadow(
+                    color: Color(_screens[_currentPage]['color'] as int)
+                        .withOpacity(0.15),
+                    blurRadius: 60,
+                    spreadRadius: 10,
+                  ),
+                ],
+              ),
+            ),
+            // Phone body
+            Container(
+              width: phoneW,
+              height: phoneH,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(36),
+                color: AppTheme.surface,
+                border: Border.all(
+                  color: Color(_screens[_currentPage]['color'] as int)
+                      .withOpacity(0.35),
+                  width: 2,
+                ),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(34),
+                child: Column(
+                  children: [
+                    // Notch bar
+                    Container(
+                      height: 28,
+                      color: AppTheme.surface2,
+                      child: Center(
+                        child: Container(
+                          width: 60,
+                          height: 10,
+                          decoration: BoxDecoration(
+                            color: AppTheme.bg,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Screen
+                    Expanded(
+                      child: PageView.builder(
+                        controller: _pageCtrl,
+                        onPageChanged: (i) =>
+                            setState(() => _currentPage = i),
+                        itemCount: _screens.length,
+                        itemBuilder: (_, i) =>
+                            _buildScreen(_screens[i]),
+                      ),
+                    ),
+                    // Home bar
+                    Container(
+                      height: 24,
+                      color: AppTheme.surface2,
+                      child: Center(
+                        child: Container(
+                          width: 72,
+                          height: 5,
+                          decoration: BoxDecoration(
+                            color: AppTheme.textMuted,
+                            borderRadius: BorderRadius.circular(3),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            // Side button
+            Positioned(
+              right: 10,
+              top: 120,
+              child: Container(
+                  width: 3,
+                  height: 40,
+                  decoration: BoxDecoration(
+                      color: AppTheme.surface3,
+                      borderRadius: BorderRadius.circular(2))),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildScreen(Map<String, dynamic> app) {
+    final color = Color(app['color'] as int);
+    final tags = List<String>.from(app['tags'] ?? []);
+
+    return Container(
+      color: AppTheme.bg,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Status bar
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('9:41',
+                  style: GoogleFonts.jetBrainsMono(
+                      fontSize: 7, color: AppTheme.textMuted)),
+              Row(children: [
+                Icon(Icons.signal_cellular_alt,
+                    size: 9, color: AppTheme.textMuted),
+                const SizedBox(width: 2),
+                Icon(Icons.wifi, size: 9, color: AppTheme.textMuted),
+                const SizedBox(width: 2),
+                Icon(Icons.battery_full,
+                    size: 9, color: AppTheme.textMuted),
+              ]),
+            ],
+          ),
+          const SizedBox(height: 10),
+          // App header card
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  color.withOpacity(0.18),
+                  color.withOpacity(0.04)
+                ],
+              ),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: color.withOpacity(0.3)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(app['icon'] as String,
+                    style: const TextStyle(fontSize: 22)),
+                const SizedBox(height: 6),
+                Text(
+                  app['name'] as String,
+                  style: GoogleFonts.syne(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.textPrimary),
+                  maxLines: 2,
+                ),
+                const SizedBox(height: 2),
+                Text(app['category'] as String,
+                    style: GoogleFonts.jetBrainsMono(
+                        fontSize: 8, color: color)),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+          // Fake UI skeleton rows
+          ...List.generate(3, (i) {
+            final widths = [0.9, 0.7, 0.8];
+            return Container(
+              margin: const EdgeInsets.only(bottom: 6),
+              height: 8,
+              child: FractionallySizedBox(
+                widthFactor: widths[i],
+                alignment: Alignment.centerLeft,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: AppTheme.surface2,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+              ),
+            );
+          }),
+          const SizedBox(height: 6),
+          // Fake button
+          Container(
+            height: 28,
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: color.withOpacity(0.3)),
+            ),
+            child: Center(
+              child: Text('Open App',
+                  style: GoogleFonts.jetBrainsMono(
+                      fontSize: 8, color: color)),
+            ),
+          ),
+          const Spacer(),
+          // Tags
+          Wrap(
+            spacing: 4,
+            runSpacing: 4,
+            children: tags
+                .map((t) => Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppTheme.surface2,
+                        borderRadius: BorderRadius.circular(3),
+                        border: Border.all(color: AppTheme.border),
+                      ),
+                      child: Text(t,
+                          style: GoogleFonts.jetBrainsMono(
+                              fontSize: 7,
+                              color: AppTheme.textSecondary)),
+                    ))
+                .toList(),
+          ),
+          const SizedBox(height: 6),
+          // Stat badge
+          Container(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppTheme.greenDim,
+              borderRadius: BorderRadius.circular(4),
+              border:
+                  Border.all(color: AppTheme.green.withOpacity(0.3)),
+            ),
+            child: Text(app['stat'] as String,
+                style: GoogleFonts.jetBrainsMono(
+                    fontSize: 7, color: AppTheme.green)),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _ContactLinkState extends State<_ContactLink> {

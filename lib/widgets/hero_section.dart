@@ -1,8 +1,10 @@
 import 'dart:math';
+import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 import '../theme/app_theme.dart';
 import '../widgets/common_widgets.dart';
 
@@ -20,8 +22,7 @@ class _HeroSectionState extends State<HeroSection>
   late AnimationController _ring3Ctrl;
   late AnimationController _scanCtrl;
   late AnimationController _chipCtrl;
-  late AnimationController _blinkCtrl;
-  bool _showCursor = true;
+  bool _statsVisible = false;
 
   @override
   void initState() {
@@ -41,16 +42,6 @@ class _HeroSectionState extends State<HeroSection>
     _chipCtrl =
         AnimationController(vsync: this, duration: const Duration(seconds: 4))
           ..repeat(reverse: true);
-    _blinkCtrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 600))
-      ..addStatusListener((s) {
-        if (s == AnimationStatus.completed) {
-          setState(() => _showCursor = !_showCursor);
-          _blinkCtrl.reset();
-          _blinkCtrl.forward();
-        }
-      });
-    _blinkCtrl.forward();
   }
 
   @override
@@ -60,7 +51,6 @@ class _HeroSectionState extends State<HeroSection>
     _ring3Ctrl.dispose();
     _scanCtrl.dispose();
     _chipCtrl.dispose();
-    _blinkCtrl.dispose();
     super.dispose();
   }
 
@@ -71,10 +61,7 @@ class _HeroSectionState extends State<HeroSection>
 
     return Container(
       constraints: const BoxConstraints(minHeight: 700),
-      padding: EdgeInsets.symmetric(
-        horizontal: w * 0.06,
-        vertical: 100,
-      ),
+      padding: EdgeInsets.symmetric(horizontal: w * 0.06, vertical: 100),
       child: isMobile
           ? Column(
               children: [
@@ -88,7 +75,8 @@ class _HeroSectionState extends State<HeroSection>
               children: [
                 Expanded(flex: 5, child: _buildHeroText(isMobile)),
                 const SizedBox(width: 60),
-                Expanded(flex: 4, child: Center(child: _buildPhotoOrbit())),
+                Expanded(
+                    flex: 4, child: Center(child: _buildPhotoOrbit())),
               ],
             ),
     );
@@ -106,12 +94,9 @@ class _HeroSectionState extends State<HeroSection>
                     fontSize: 12, color: AppTheme.textMuted)),
             Text('whoami',
                 style: GoogleFonts.jetBrainsMono(
-                    fontSize: 12, color: AppTheme.green, letterSpacing: 0.1)),
-            Text(
-              _showCursor ? '_' : ' ',
-              style: GoogleFonts.jetBrainsMono(
-                  fontSize: 12, color: AppTheme.green),
-            ),
+                    fontSize: 12,
+                    color: AppTheme.green,
+                    letterSpacing: 0.1)),
           ],
         ).animate().fadeIn(duration: 400.ms),
         const SizedBox(height: 20),
@@ -138,18 +123,47 @@ class _HeroSectionState extends State<HeroSection>
             .slideY(begin: 0.3, end: 0),
         const SizedBox(height: 12),
 
-        // Role
-        RichText(
-          text: TextSpan(
-            style: GoogleFonts.jetBrainsMono(
-                fontSize: 13,
-                color: AppTheme.textSecondary,
-                letterSpacing: 0.04),
-            children: [
-              TextSpan(
-                  text: 'Senior ', style: TextStyle(color: AppTheme.accent)),
-              const TextSpan(text: 'Flutter & Android Developer'),
+        // Typewriter role
+        SizedBox(
+          height: 22,
+          child: AnimatedTextKit(
+            animatedTexts: [
+              TypewriterAnimatedText(
+                'Senior Flutter Developer',
+                textStyle: GoogleFonts.jetBrainsMono(
+                    fontSize: 13,
+                    color: AppTheme.accent,
+                    letterSpacing: 0.04),
+                speed: const Duration(milliseconds: 70),
+              ),
+              TypewriterAnimatedText(
+                'Android App Architect',
+                textStyle: GoogleFonts.jetBrainsMono(
+                    fontSize: 13,
+                    color: AppTheme.green,
+                    letterSpacing: 0.04),
+                speed: const Duration(milliseconds: 70),
+              ),
+              TypewriterAnimatedText(
+                'Mobile UI Engineer',
+                textStyle: GoogleFonts.jetBrainsMono(
+                    fontSize: 13,
+                    color: AppTheme.amber,
+                    letterSpacing: 0.04),
+                speed: const Duration(milliseconds: 70),
+              ),
+              TypewriterAnimatedText(
+                'Fintech App Specialist',
+                textStyle: GoogleFonts.jetBrainsMono(
+                    fontSize: 13,
+                    color: AppTheme.purple,
+                    letterSpacing: 0.04),
+                speed: const Duration(milliseconds: 70),
+              ),
             ],
+            repeatForever: true,
+            pause: const Duration(milliseconds: 1800),
+            displayFullTextOnTap: false,
           ),
         ).animate().fadeIn(delay: 400.ms),
         const SizedBox(height: 24),
@@ -166,17 +180,44 @@ class _HeroSectionState extends State<HeroSection>
         ).animate().fadeIn(delay: 500.ms),
         const SizedBox(height: 32),
 
-        // Stats
-        Row(
-          children: [
-            _stat('8+', 'Years', AppTheme.accent),
-            const SizedBox(width: 36),
-            _stat('20+', 'Live Apps', AppTheme.green),
-            const SizedBox(width: 36),
-            _stat('50K+', 'Users', AppTheme.amber),
-            const SizedBox(width: 36),
-            _stat('4.4★', 'Rating', AppTheme.pink),
-          ],
+        // Scroll-triggered counting stats
+        VisibilityDetector(
+          key: const Key('hero-stats'),
+          onVisibilityChanged: (info) {
+            if (info.visibleFraction > 0.5 && !_statsVisible) {
+              setState(() => _statsVisible = true);
+            }
+          },
+          child: Row(
+            children: [
+              _CountStat(
+                  target: 8,
+                  suffix: '+',
+                  label: 'Years',
+                  color: AppTheme.accent,
+                  trigger: _statsVisible),
+              const SizedBox(width: 36),
+              _CountStat(
+                  target: 20,
+                  suffix: '+',
+                  label: 'Live Apps',
+                  color: AppTheme.green,
+                  trigger: _statsVisible),
+              const SizedBox(width: 36),
+              _CountStat(
+                  target: 50,
+                  suffix: 'K+',
+                  label: 'Users',
+                  color: AppTheme.amber,
+                  trigger: _statsVisible),
+              const SizedBox(width: 36),
+              _StaticStat(
+                  value: '4.4★',
+                  label: 'Rating',
+                  color: AppTheme.pink,
+                  trigger: _statsVisible),
+            ],
+          ),
         ).animate().fadeIn(delay: 600.ms),
         const SizedBox(height: 36),
 
@@ -187,34 +228,16 @@ class _HeroSectionState extends State<HeroSection>
           children: [
             GlowButton(
               label: '✉  Get In Touch',
-              onTap: () => launchUrl(Uri.parse('mailto:abhik9608@gmail.com')),
+              onTap: () =>
+                  launchUrl(Uri.parse('mailto:${AppData.email}')),
             ),
             GlowButton(
               label: '↗  LinkedIn',
               primary: false,
-              onTap: () => launchUrl(Uri.parse(
-                  'https://linkedin.com/in/abhimanyu-kumar-1768bb110')),
+              onTap: () => launchUrl(Uri.parse(AppData.linkedin)),
             ),
           ],
         ).animate().fadeIn(delay: 700.ms),
-      ],
-    );
-  }
-
-  Widget _stat(String value, String label, Color color) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(value,
-            style: GoogleFonts.jetBrainsMono(
-                fontSize: 28,
-                fontWeight: FontWeight.w700,
-                color: color,
-                height: 1)),
-        const SizedBox(height: 4),
-        Text(label,
-            style: GoogleFonts.jetBrainsMono(
-                fontSize: 10, color: AppTheme.textMuted, letterSpacing: 0.1)),
       ],
     );
   }
@@ -226,7 +249,6 @@ class _HeroSectionState extends State<HeroSection>
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // Ring 3
           AnimatedBuilder(
             animation: _ring3Ctrl,
             builder: (_, __) => Transform.rotate(
@@ -242,7 +264,6 @@ class _HeroSectionState extends State<HeroSection>
               ),
             ),
           ),
-          // Ring 2
           AnimatedBuilder(
             animation: _ring2Ctrl,
             builder: (_, __) => Transform.rotate(
@@ -258,7 +279,6 @@ class _HeroSectionState extends State<HeroSection>
               ),
             ),
           ),
-          // Ring 1 with dots
           AnimatedBuilder(
             animation: _ring1Ctrl,
             builder: (_, __) => Transform.rotate(
@@ -272,10 +292,10 @@ class _HeroSectionState extends State<HeroSection>
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(
-                            color: AppTheme.accent.withOpacity(0.2), width: 1),
+                            color: AppTheme.accent.withOpacity(0.2),
+                            width: 1),
                       ),
                     ),
-                    // Top dot
                     Positioned(
                       top: 0,
                       left: 0,
@@ -296,7 +316,6 @@ class _HeroSectionState extends State<HeroSection>
                         ),
                       ),
                     ),
-                    // Bottom dot
                     Positioned(
                       bottom: 0,
                       left: 0,
@@ -322,11 +341,7 @@ class _HeroSectionState extends State<HeroSection>
               ),
             ),
           ),
-
-          // Photo
           _buildPhotoCircle(),
-
-          // Floating chips
           _chip('Flutter', AppTheme.accent, const Offset(200, 60), 0),
           _chip('50K+ Users', AppTheme.green, const Offset(220, 270), 1),
           _chip('Dart · Kotlin', AppTheme.amber, const Offset(-130, 100), 2),
@@ -341,7 +356,6 @@ class _HeroSectionState extends State<HeroSection>
     return Stack(
       alignment: Alignment.center,
       children: [
-        // Glow ring
         Container(
           width: 248,
           height: 248,
@@ -355,7 +369,6 @@ class _HeroSectionState extends State<HeroSection>
             ],
           ),
         ),
-        // Photo
         ClipOval(
           child: Container(
             width: 236,
@@ -372,13 +385,11 @@ class _HeroSectionState extends State<HeroSection>
             ),
           ),
         ),
-        // Scan line
         AnimatedBuilder(
           animation: _scanCtrl,
           builder: (_, __) {
-            final progress = _scanCtrl.value;
             return Positioned(
-              top: progress * 236,
+              top: _scanCtrl.value * 236,
               child: Container(
                 width: 236,
                 height: 3,
@@ -395,14 +406,13 @@ class _HeroSectionState extends State<HeroSection>
             );
           },
         ),
-        // Corner brackets
         ..._buildBrackets(),
-        // Status badge
         Positioned(
           bottom: -10,
           right: -10,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
               color: AppTheme.surface,
               borderRadius: BorderRadius.circular(20),
@@ -411,7 +421,7 @@ class _HeroSectionState extends State<HeroSection>
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _PulsingDot(color: AppTheme.green),
+                const _PulsingDot(color: AppTheme.green),
                 const SizedBox(width: 6),
                 Text('Available',
                     style: GoogleFonts.jetBrainsMono(
@@ -430,7 +440,9 @@ class _HeroSectionState extends State<HeroSection>
     const offset = 10.0;
     return [
       Positioned(
-          top: offset, left: offset, child: _bracket(true, true, size, thick)),
+          top: offset,
+          left: offset,
+          child: _bracket(true, true, size, thick)),
       Positioned(
           top: offset,
           right: offset,
@@ -464,13 +476,17 @@ class _HeroSectionState extends State<HeroSection>
         return Transform.translate(
           offset: Offset(offset.dx, offset.dy + bounce),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
               color: AppTheme.surface.withOpacity(0.95),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: color.withOpacity(0.4), width: 1),
+              border:
+                  Border.all(color: color.withOpacity(0.4), width: 1),
               boxShadow: [
-                BoxShadow(color: Colors.black.withOpacity(0.4), blurRadius: 12)
+                BoxShadow(
+                    color: Colors.black.withOpacity(0.4),
+                    blurRadius: 12)
               ],
             ),
             child: Row(
@@ -479,17 +495,102 @@ class _HeroSectionState extends State<HeroSection>
                 Container(
                     width: 5,
                     height: 5,
-                    decoration:
-                        BoxDecoration(shape: BoxShape.circle, color: color)),
+                    decoration: BoxDecoration(
+                        shape: BoxShape.circle, color: color)),
                 const SizedBox(width: 5),
                 Text(label,
-                    style:
-                        GoogleFonts.jetBrainsMono(fontSize: 10, color: color)),
+                    style: GoogleFonts.jetBrainsMono(
+                        fontSize: 10, color: color)),
               ],
             ),
           ),
         );
       },
+    );
+  }
+}
+
+// ── Animated counting stat ─────────────────────────────────────────────────────
+class _CountStat extends StatelessWidget {
+  final int target;
+  final String suffix;
+  final String label;
+  final Color color;
+  final bool trigger;
+
+  const _CountStat({
+    required this.target,
+    required this.suffix,
+    required this.label,
+    required this.color,
+    required this.trigger,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0, end: trigger ? target.toDouble() : 0),
+          duration: const Duration(milliseconds: 1600),
+          curve: Curves.easeOut,
+          builder: (_, val, __) => Text(
+            '${val.toInt()}$suffix',
+            style: GoogleFonts.jetBrainsMono(
+                fontSize: 28,
+                fontWeight: FontWeight.w700,
+                color: color,
+                height: 1),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(label,
+            style: GoogleFonts.jetBrainsMono(
+                fontSize: 10,
+                color: AppTheme.textMuted,
+                letterSpacing: 0.1)),
+      ],
+    );
+  }
+}
+
+class _StaticStat extends StatelessWidget {
+  final String value;
+  final String label;
+  final Color color;
+  final bool trigger;
+
+  const _StaticStat(
+      {required this.value,
+      required this.label,
+      required this.color,
+      required this.trigger});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        AnimatedOpacity(
+          opacity: trigger ? 1.0 : 0.0,
+          duration: const Duration(milliseconds: 800),
+          child: Text(
+            value,
+            style: GoogleFonts.jetBrainsMono(
+                fontSize: 28,
+                fontWeight: FontWeight.w700,
+                color: color,
+                height: 1),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(label,
+            style: GoogleFonts.jetBrainsMono(
+                fontSize: 10,
+                color: AppTheme.textMuted,
+                letterSpacing: 0.1)),
+      ],
     );
   }
 }
@@ -510,7 +611,8 @@ class _PulsingDotState extends State<_PulsingDot>
   @override
   void initState() {
     super.initState();
-    _c = AnimationController(vsync: this, duration: const Duration(seconds: 2))
+    _c = AnimationController(
+        vsync: this, duration: const Duration(seconds: 2))
       ..repeat(reverse: true);
     _a = Tween(begin: 0.3, end: 1.0).animate(_c);
   }

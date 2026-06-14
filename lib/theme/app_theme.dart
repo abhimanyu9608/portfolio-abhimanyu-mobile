@@ -50,6 +50,7 @@ class AppData {
   static const email = 'abhik9608@gmail.com';
   static const phone = '+91-8766389395';
   static const linkedin = 'https://linkedin.com/in/abhimanyu-kumar-1768bb110';
+  static const github = 'https://github.com/abhimanyu9608';
   static const yearsExp = '8+';
   static const totalApps = '20+';
   static const totalUsers = '50K+';
@@ -61,36 +62,70 @@ class AppData {
       'label': 'Mobile',
       'tags': ['Flutter', 'Dart', 'Android Native', 'Kotlin', 'Java', 'Android TV', 'Flutter Web'],
       'featured': ['Flutter', 'Dart', 'Kotlin'],
+      'progress': 0.95,
     },
     {
       'icon': '⚡',
       'label': 'State Management',
       'tags': ['BLoC', 'Riverpod', 'Provider', 'GetX', 'setState', 'Clean Architecture', 'MVVM'],
       'featured': ['BLoC', 'Riverpod', 'Clean Architecture'],
+      'progress': 0.90,
     },
     {
       'icon': '🔗',
       'label': 'Backend & APIs',
       'tags': ['REST APIs', 'Firebase FCM', 'Firestore', 'Firebase Auth', 'GraphQL', 'Dio', 'Sinch SDK'],
       'featured': ['REST APIs', 'Firestore'],
+      'progress': 0.85,
     },
     {
       'icon': '💳',
       'label': 'Payments',
       'tags': ['RazorPay', 'Paytm', 'Stripe', 'PayPal'],
       'featured': ['RazorPay'],
+      'progress': 0.88,
     },
     {
       'icon': '🛠',
       'label': 'DevTools & CI/CD',
       'tags': ['Android Studio', 'VS Code', 'Git', 'Bitbucket', 'Jira', 'CI/CD', 'Play Console'],
       'featured': ['Git', 'CI/CD'],
+      'progress': 0.85,
     },
     {
       'icon': '🧪',
       'label': 'Testing & Methods',
       'tags': ['Unit Testing', 'Widget Testing', 'Integration Testing', 'Null Safety', 'Agile/Scrum', 'Platform Channels'],
       'featured': ['Agile/Scrum'],
+      'progress': 0.80,
+    },
+  ];
+
+  static const List<Map<String, dynamic>> process = [
+    {
+      'step': '01', 'icon': '🔍', 'title': 'Discover',
+      'desc': 'Requirements gathering, wireframing, technical feasibility and architecture planning.',
+      'tags': ['Requirements', 'Wireframes', 'Planning'],
+    },
+    {
+      'step': '02', 'icon': '🏗️', 'title': 'Architect',
+      'desc': 'Clean Architecture layers, BLoC/Riverpod state design, API contracts and data models.',
+      'tags': ['Clean Arch', 'BLoC', 'MVVM'],
+    },
+    {
+      'step': '03', 'icon': '⚡', 'title': 'Build',
+      'desc': 'Flutter/Dart development with platform channels, CI/CD pipelines and peer code reviews.',
+      'tags': ['Flutter', 'Dart', 'CI/CD'],
+    },
+    {
+      'step': '04', 'icon': '🧪', 'title': 'Test',
+      'desc': 'Unit, widget and integration tests. DevTools profiling. Zero critical post-release defects.',
+      'tags': ['Unit Tests', 'Widget Tests', 'Profiling'],
+    },
+    {
+      'step': '05', 'icon': '🚀', 'title': 'Ship',
+      'desc': 'Play Store staged rollouts, crash monitoring, performance tracking and iteration.',
+      'tags': ['Play Console', 'Rollouts', 'Monitoring'],
     },
   ];
 

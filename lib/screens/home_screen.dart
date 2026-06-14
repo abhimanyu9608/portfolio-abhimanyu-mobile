@@ -22,23 +22,56 @@ class _HomeScreenState extends State<HomeScreen> {
   final _eduKey = GlobalKey();
   final _contactKey = GlobalKey();
 
+  double _scrollProgress = 0.0;
+  int _activeNavIndex = -1;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollCtrl.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    final pos = _scrollCtrl.position;
+    final progress =
+        pos.maxScrollExtent > 0 ? pos.pixels / pos.maxScrollExtent : 0.0;
+    setState(() {
+      _scrollProgress = progress.clamp(0.0, 1.0);
+      _activeNavIndex = _computeActiveSection();
+    });
+  }
+
+  int _computeActiveSection() {
+    final keys = [_skillsKey, _expKey, _appsKey, _eduKey, _contactKey];
+    int active = -1;
+    for (int i = 0; i < keys.length; i++) {
+      final ctx = keys[i].currentContext;
+      if (ctx == null) continue;
+      final box = ctx.findRenderObject() as RenderBox?;
+      if (box == null) continue;
+      final top = box.localToGlobal(Offset.zero).dy;
+      if (top <= 140) active = i;
+    }
+    return active;
+  }
+
   @override
   void dispose() {
+    _scrollCtrl.removeListener(_onScroll);
     _scrollCtrl.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final w = MediaQuery.of(context).size.width;
     return Scaffold(
       backgroundColor: AppTheme.bg,
       body: Stack(
         children: [
-          // Matrix + Grid background (fixed)
+          // Matrix + grid background
           const Positioned.fill(child: MatrixBackground()),
-          Positioned.fill(
-            child: CustomPaint(painter: GridPainter()),
-          ),
+          Positioned.fill(child: CustomPaint(painter: GridPainter())),
 
           // Scanline overlay
           Positioned.fill(
@@ -62,53 +95,61 @@ class _HomeScreenState extends State<HomeScreen> {
           // Main content
           Column(
             children: [
-              // Fixed navbar
               NavBar(
                 scrollController: _scrollCtrl,
-                sectionKeys: [_skillsKey, _expKey, _appsKey, _eduKey, _contactKey],
+                sectionKeys: [
+                  _skillsKey,
+                  _expKey,
+                  _appsKey,
+                  _eduKey,
+                  _contactKey
+                ],
+                activeIndex: _activeNavIndex,
               ),
-
-              // Scrollable body
               Expanded(
                 child: SingleChildScrollView(
                   controller: _scrollCtrl,
                   child: Column(
                     children: [
-                      // Hero
                       const HeroSection(),
-
-                      // Code marquee strip
                       const CodeMarquee(),
-
-                      // Skills
+                      const PhoneShowcaseSection(),
+                      const ProcessSection(),
                       Container(key: _skillsKey, child: const SkillsSection()),
-
-                      // Experience
                       Container(key: _expKey, child: const ExperienceSection()),
-
-                      // Apps
                       Container(key: _appsKey, child: const AppsSection()),
-
-                      // Education
                       Container(key: _eduKey, child: const EducationSection()),
-
-                      // Contact
-                      Container(key: _contactKey, child: const ContactSection()),
-
-                      // Footer
-                      _buildFooter(),
+                      Container(
+                          key: _contactKey, child: const ContactSection()),
+                      _buildFooter(w),
                     ],
                   ),
                 ),
               ),
             ],
           ),
+
+          // Scroll progress bar (top edge)
+          Positioned(
+            top: 0,
+            left: 0,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 40),
+              height: 2,
+              width: MediaQuery.of(context).size.width * _scrollProgress,
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [AppTheme.accent, AppTheme.green, AppTheme.purple],
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildFooter() {
+  Widget _buildFooter(double w) {
     return Container(
       color: AppTheme.bg2,
       padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 28),
@@ -117,10 +158,12 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           Text(
             '© 2026  Abhimanyu Kumar · Senior Flutter Developer',
-            style: GoogleFonts.jetBrainsMono(fontSize: 11, color: AppTheme.textMuted),
+            style: GoogleFonts.jetBrainsMono(
+                fontSize: 11, color: AppTheme.textMuted),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
               color: const Color(0x33185FA5),
               borderRadius: BorderRadius.circular(4),
@@ -128,7 +171,8 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             child: Text(
               '◈ Built with Flutter Web',
-              style: GoogleFonts.jetBrainsMono(fontSize: 10, color: const Color(0xFF64B5F6)),
+              style: GoogleFonts.jetBrainsMono(
+                  fontSize: 10, color: const Color(0xFF64B5F6)),
             ),
           ),
         ],
