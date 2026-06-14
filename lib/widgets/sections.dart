@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../theme/app_theme.dart';
@@ -590,7 +591,77 @@ class _AppCardState extends State<_AppCard> {
                 ),
               ],
             ),
+            if ((widget.data['url'] as String? ?? '').isNotEmpty) ...[
+              const SizedBox(height: 12),
+              _PlayStoreButton(
+                url: widget.data['url'] as String,
+                accentColor: widget.accentColor,
+              ),
+            ],
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PlayStoreButton extends StatefulWidget {
+  final String url;
+  final Color accentColor;
+  const _PlayStoreButton({required this.url, required this.accentColor});
+
+  @override
+  State<_PlayStoreButton> createState() => _PlayStoreButtonState();
+}
+
+class _PlayStoreButtonState extends State<_PlayStoreButton> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: GestureDetector(
+        onTap: () => launchUrl(
+          Uri.parse(widget.url),
+          mode: LaunchMode.externalApplication,
+        ),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 9),
+          decoration: BoxDecoration(
+            color: _hovered
+                ? widget.accentColor.withOpacity(0.12)
+                : AppTheme.bg3,
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(
+              color: _hovered
+                  ? widget.accentColor.withOpacity(0.5)
+                  : AppTheme.border,
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              FaIcon(
+                FontAwesomeIcons.googlePlay,
+                size: 10,
+                color: _hovered ? widget.accentColor : AppTheme.textMuted,
+              ),
+              const SizedBox(width: 7),
+              Text(
+                'View on Play Store',
+                style: GoogleFonts.jetBrainsMono(
+                  fontSize: 10,
+                  color: _hovered ? widget.accentColor : AppTheme.textMuted,
+                  letterSpacing: 0.04,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

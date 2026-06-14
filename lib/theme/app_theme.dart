@@ -164,26 +164,31 @@ class AppData {
       'icon': '📋', 'name': 'Capricorn Customer App',
       'desc': 'Full-cycle DSC app: document upload, KYC video verification, real-time tracking, RazorPay payments.',
       'users': '50,000+ users', 'rating': '4.4★', 'color': 0xFF00D4FF,
+      'url': 'https://play.google.com/store/apps/details?id=dscenrollment.capricorn.com.capturevideodsc',
     },
     {
       'icon': '✍️', 'name': 'eSign.Digital',
       'desc': 'Aadhaar-based paperless signing with Face, Fingerprint & IRIS biometric auth. IT Act compliant.',
       'users': '20,000+ enterprise', 'rating': 'Live', 'color': 0xFF00FF88,
+      'url': 'https://play.google.com/store/apps/details?id=com.capricorn.esign.digital',
     },
     {
       'icon': '🔐', 'name': 'AuthTech Authenticator',
       'desc': 'Two-factor authentication with multi-factor biometric support and enterprise-grade security.',
       'users': 'Google Play', 'rating': 'Live', 'color': 0xFFFFAA00,
+      'url': 'https://play.google.com/store/apps/details?id=com.ca.capricorn_authenticator',
     },
     {
       'icon': '🔒', 'name': 'Locker.Digital',
       'desc': 'File encryption & digital locker. End-to-end encryption with advanced security protocols.',
       'users': 'Google Play', 'rating': 'Live', 'color': 0xFFFF4488,
+      'url': 'https://play.google.com/store/apps/details?id=com.locker.digital',
     },
     {
       'icon': '📡', 'name': 'Capricorn DSC Channel',
       'desc': 'DSC channel management and workflow automation for enterprise digital certificate handling.',
       'users': 'Google Play', 'rating': 'Live', 'color': 0xFFAA44FF,
+      'url': 'https://play.google.com/store/apps/details?id=productcaller.caller.capricorn.CapricornDSCChannel',
     },
     {
       'icon': '📺', 'name': 'My Nextra – Online TV',
