@@ -1486,9 +1486,7 @@ class _PhoneShowcaseSectionState extends State<PhoneShowcaseSection>
                             case 1:
                               return _AppScreenshots(
                                 urls: const [
-                                  'https://play-lh.googleusercontent.com/CqEbmjyiWAT3hLEkQpxz1jnOosDI4kiX6zpcmVQ4qTnWQ18r7-VSYFMbjzRZDrevBQ=h800',
-                                  'https://play-lh.googleusercontent.com/uUvIoprzmsLOsOcq1VExRB_CY_3dJvqdVi4aob2nqo1gNHFlmLqLljuTOgJ05aRal3mQ=h800',
-                                  'https://play-lh.googleusercontent.com/aaDYscs_c_shBbw9jH0qM1ORFXf_o4AvdUPi9ZGRCjlwI1HwnVi16Fs6_Wls9eB-9vUoM=h800',
+                                  'assets/screenshots/esign.webp',
                                 ],
                                 color: const Color(0xFF00FF88),
                                 name: 'eSign.Digital',
@@ -1496,9 +1494,7 @@ class _PhoneShowcaseSectionState extends State<PhoneShowcaseSection>
                             case 2:
                               return _AppScreenshots(
                                 urls: const [
-                                  'https://play-lh.googleusercontent.com/EyNNNBIieedQhVi3944FwioGTaDPsDSI3cFN9_6gYnqimauu0U51eR0aDlrudaBx9NGtTb=h800',
-                                  'https://play-lh.googleusercontent.com/PtCviv-uVf2Jd7IPwZU5RRwXpWvquiLtEgsCwUs9UEAQYU5MbgsSexytyuYBtcT3nJSbPg=h800',
-                                  'https://play-lh.googleusercontent.com/4gGVRnst2XjjkgPRsWdiX8hokSf-WcglyGPfRrt4TXDn78cFZO1mGweJiBubg9-s0Rg=h800',
+                                  'assets/screenshots/authtech.webp',
                                 ],
                                 color: const Color(0xFFFFAA00),
                                 name: 'AuthTech Authenticator',
@@ -1506,9 +1502,7 @@ class _PhoneShowcaseSectionState extends State<PhoneShowcaseSection>
                             case 3:
                               return _AppScreenshots(
                                 urls: const [
-                                  'https://play-lh.googleusercontent.com/hNfofnhUBqs7-UiH1B19d8lXUKr2kxRGJzbZnRv5-pJW0KXvzcb7Q8OSt0RZZ2a9Qvnq=h800',
-                                  'https://play-lh.googleusercontent.com/1zTUgCemFlzJVgZvtlrvAc0DOeko8kOsXaSu8Tcl_4Mrw4nffkBdCt2icbPDgu3sIe8=h800',
-                                  'https://play-lh.googleusercontent.com/uRzlfL-nhfOkY6WTxeLRRfHKZmaSmfmXCYqoA48AJz8K5boVeOIaVB9IIRkZneeg8Hw=h800',
+                                  'assets/screenshots/locker.webp',
                                 ],
                                 color: const Color(0xFFFF4488),
                                 name: 'Locker.Digital',
@@ -1587,7 +1581,7 @@ class _AppScreenshotsState extends State<_AppScreenshots> {
   void initState() {
     super.initState();
     if (widget.urls.length > 1) {
-      _timer = Timer.periodic(const Duration(milliseconds: 1800), (_) {
+      _timer = Timer.periodic(const Duration(milliseconds: 2000), (_) {
         if (mounted) {
           setState(
               () => _current = (_current + 1) % widget.urls.length);
@@ -1602,6 +1596,74 @@ class _AppScreenshotsState extends State<_AppScreenshots> {
     super.dispose();
   }
 
+  Widget _buildImage(String url) {
+    final isAsset = url.startsWith('assets/');
+    if (isAsset) {
+      return Image.asset(
+        url,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
+        errorBuilder: (_, __, ___) => _errorPlaceholder(),
+      );
+    }
+    return Image.network(
+      url,
+      fit: BoxFit.cover,
+      width: double.infinity,
+      height: double.infinity,
+      loadingBuilder: (_, child, progress) {
+        if (progress == null) return child;
+        return _loadingPlaceholder(progress);
+      },
+      errorBuilder: (_, __, ___) => _errorPlaceholder(),
+    );
+  }
+
+  Widget _loadingPlaceholder(ImageChunkEvent progress) => Container(
+        color: AppTheme.surface,
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 28,
+                height: 28,
+                child: CircularProgressIndicator(
+                  value: progress.expectedTotalBytes != null
+                      ? progress.cumulativeBytesLoaded /
+                          progress.expectedTotalBytes!
+                      : null,
+                  color: widget.color,
+                  strokeWidth: 2.5,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(widget.name,
+                  style: GoogleFonts.jetBrainsMono(
+                      fontSize: 8, color: widget.color)),
+            ],
+          ),
+        ),
+      );
+
+  Widget _errorPlaceholder() => Container(
+        color: AppTheme.surface,
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.image_not_supported_outlined,
+                  color: widget.color, size: 22),
+              const SizedBox(height: 8),
+              Text(widget.name,
+                  style: GoogleFonts.jetBrainsMono(
+                      fontSize: 8, color: widget.color)),
+            ],
+          ),
+        ),
+      );
+
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -1609,57 +1671,9 @@ class _AppScreenshotsState extends State<_AppScreenshots> {
       children: [
         AnimatedSwitcher(
           duration: const Duration(milliseconds: 700),
-          child: Image.network(
-            widget.urls[_current],
+          child: KeyedSubtree(
             key: ValueKey(_current),
-            fit: BoxFit.cover,
-            width: double.infinity,
-            height: double.infinity,
-            loadingBuilder: (_, child, progress) {
-              if (progress == null) return child;
-              return Container(
-                color: AppTheme.surface,
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SizedBox(
-                        width: 28,
-                        height: 28,
-                        child: CircularProgressIndicator(
-                          value: progress.expectedTotalBytes != null
-                              ? progress.cumulativeBytesLoaded /
-                                  progress.expectedTotalBytes!
-                              : null,
-                          color: widget.color,
-                          strokeWidth: 2.5,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Text(widget.name,
-                          style: GoogleFonts.jetBrainsMono(
-                              fontSize: 8, color: widget.color)),
-                    ],
-                  ),
-                ),
-              );
-            },
-            errorBuilder: (_, __, ___) => Container(
-              color: AppTheme.surface,
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.image_not_supported_outlined,
-                        color: widget.color, size: 22),
-                    const SizedBox(height: 8),
-                    Text(widget.name,
-                        style: GoogleFonts.jetBrainsMono(
-                            fontSize: 8, color: widget.color)),
-                  ],
-                ),
-              ),
-            ),
+            child: _buildImage(widget.urls[_current]),
           ),
         ),
         // Bottom gradient overlay with app name + screenshot dots
@@ -1692,23 +1706,24 @@ class _AppScreenshotsState extends State<_AppScreenshots> {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                Row(
-                  children: List.generate(
-                    widget.urls.length,
-                    (i) => AnimatedContainer(
-                      duration: const Duration(milliseconds: 300),
-                      width: i == _current ? 14 : 5,
-                      height: 5,
-                      margin: const EdgeInsets.only(left: 3),
-                      decoration: BoxDecoration(
-                        color: i == _current
-                            ? widget.color
-                            : Colors.white38,
-                        borderRadius: BorderRadius.circular(3),
+                if (widget.urls.length > 1)
+                  Row(
+                    children: List.generate(
+                      widget.urls.length,
+                      (i) => AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        width: i == _current ? 14 : 5,
+                        height: 5,
+                        margin: const EdgeInsets.only(left: 3),
+                        decoration: BoxDecoration(
+                          color: i == _current
+                              ? widget.color
+                              : Colors.white38,
+                          borderRadius: BorderRadius.circular(3),
+                        ),
                       ),
                     ),
                   ),
-                ),
               ],
             ),
           ),
