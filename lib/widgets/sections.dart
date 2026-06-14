@@ -1596,87 +1596,32 @@ class _AppScreenshotsState extends State<_AppScreenshots> {
     super.dispose();
   }
 
-  Widget _buildImage(String url) {
-    final isAsset = url.startsWith('assets/');
-    if (isAsset) {
-      return Image.asset(
-        url,
-        fit: BoxFit.cover,
-        width: double.infinity,
-        height: double.infinity,
-        errorBuilder: (_, __, ___) => _errorPlaceholder(),
-      );
-    }
-    return Image.network(
-      url,
-      fit: BoxFit.cover,
-      width: double.infinity,
-      height: double.infinity,
-      loadingBuilder: (_, child, progress) {
-        if (progress == null) return child;
-        return _loadingPlaceholder(progress);
-      },
-      errorBuilder: (_, __, ___) => _errorPlaceholder(),
-    );
-  }
-
-  Widget _loadingPlaceholder(ImageChunkEvent progress) => Container(
-        color: AppTheme.surface,
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(
-                width: 28,
-                height: 28,
-                child: CircularProgressIndicator(
-                  value: progress.expectedTotalBytes != null
-                      ? progress.cumulativeBytesLoaded /
-                          progress.expectedTotalBytes!
-                      : null,
-                  color: widget.color,
-                  strokeWidth: 2.5,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(widget.name,
-                  style: GoogleFonts.jetBrainsMono(
-                      fontSize: 8, color: widget.color)),
-            ],
-          ),
-        ),
-      );
-
-  Widget _errorPlaceholder() => Container(
-        color: AppTheme.surface,
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.image_not_supported_outlined,
-                  color: widget.color, size: 22),
-              const SizedBox(height: 8),
-              Text(widget.name,
-                  style: GoogleFonts.jetBrainsMono(
-                      fontSize: 8, color: widget.color)),
-            ],
-          ),
-        ),
-      );
+  ImageProvider _provider(String url) => url.startsWith('assets/')
+      ? AssetImage(url) as ImageProvider
+      : NetworkImage(url);
 
   @override
   Widget build(BuildContext context) {
+    final url = widget.urls[_current];
     return Stack(
       fit: StackFit.expand,
       children: [
+        // Container + DecorationImage reliably fills any tight constraints
         AnimatedSwitcher(
           duration: const Duration(milliseconds: 700),
-          child: KeyedSubtree(
+          child: Container(
             key: ValueKey(_current),
-            child: _buildImage(widget.urls[_current]),
+            decoration: BoxDecoration(
+              color: AppTheme.surface,
+              image: DecorationImage(
+                image: _provider(url),
+                fit: BoxFit.cover,
+                onError: (_, __) {},
+              ),
+            ),
           ),
         ),
-        // Bottom gradient overlay with app name + screenshot dots
+        // Bottom gradient: app name + screenshot dot indicators
         Positioned(
           bottom: 0,
           left: 0,
@@ -1689,7 +1634,7 @@ class _AppScreenshotsState extends State<_AppScreenshots> {
                 end: Alignment.topCenter,
                 colors: [
                   Colors.black.withOpacity(0.88),
-                  Colors.transparent
+                  Colors.transparent,
                 ],
               ),
             ),
