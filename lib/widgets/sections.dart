@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../theme/app_theme.dart';
@@ -646,10 +645,12 @@ class _PlayStoreButtonState extends State<_PlayStoreButton> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              FaIcon(
-                FontAwesomeIcons.googlePlay,
-                size: 10,
-                color: _hovered ? widget.accentColor : AppTheme.textMuted,
+              Text(
+                '▶',
+                style: TextStyle(
+                  fontSize: 9,
+                  color: _hovered ? widget.accentColor : AppTheme.textMuted,
+                ),
               ),
               const SizedBox(width: 7),
               Text(
