@@ -1281,58 +1281,23 @@ class _PhoneShowcaseSectionState extends State<PhoneShowcaseSection>
   late AnimationController _autoCtrl;
   int _currentPage = 0;
 
-  static const _screens = [
-    {
-      'name': 'Capricorn Customer App',
-      'category': 'Fintech · DSC · KYC',
-      'icon': '📋',
-      'color': 0xFF00D4FF,
-      'stat': '50K+ users · 4.4★',
-      'tags': ['Flutter', 'BLoC', 'RazorPay'],
-    },
-    {
-      'name': 'eSign.Digital',
-      'category': 'Digital Identity · Aadhaar',
-      'icon': '✍️',
-      'color': 0xFF00FF88,
-      'stat': '20K+ enterprise users',
-      'tags': ['Biometric', 'Face Auth', 'IT Act'],
-    },
-    {
-      'name': 'AuthTech Authenticator',
-      'category': 'Security · 2FA · MFA',
-      'icon': '🔐',
-      'color': 0xFFFFAA00,
-      'stat': 'Enterprise · Google Play',
-      'tags': ['2FA', 'Biometric', 'TOTP'],
-    },
-    {
-      'name': 'My Menu',
-      'category': 'Food & Restaurant',
-      'icon': '🍽️',
-      'color': 0xFFFF4488,
-      'stat': 'QR Scan · Dine-in · Takeaway',
-      'tags': ['Maps', 'QR', 'Ordering'],
-    },
-    {
-      'name': 'SDSS',
-      'category': 'Android TV · Digital Signage',
-      'icon': '🖥️',
-      'color': 0xFFAA44FF,
-      'stat': 'ExoPlayer · Scheduled Playlists',
-      'tags': ['Android TV', 'ExoPlayer', 'Leanback'],
-    },
+  static const _kCount = 5;
+  static const _kColors = [
+    Color(0xFF00D4FF),
+    Color(0xFF00FF88),
+    Color(0xFFFFAA00),
+    Color(0xFFFF4488),
+    Color(0xFFAA44FF),
   ];
-
   @override
   void initState() {
     super.initState();
     _pageCtrl = PageController();
     _autoCtrl =
-        AnimationController(vsync: this, duration: const Duration(seconds: 3))
+        AnimationController(vsync: this, duration: const Duration(seconds: 4))
           ..addStatusListener((s) {
             if (s == AnimationStatus.completed && mounted) {
-              final next = (_currentPage + 1) % _screens.length;
+              final next = (_currentPage + 1) % _kCount;
               _pageCtrl.animateToPage(next,
                   duration: const Duration(milliseconds: 500),
                   curve: Curves.easeInOut);
@@ -1410,7 +1375,7 @@ class _PhoneShowcaseSectionState extends State<PhoneShowcaseSection>
           const SizedBox(height: 24),
           // Dot indicators
           Row(
-            children: List.generate(_screens.length, (i) {
+            children: List.generate(_kCount, (i) {
               return GestureDetector(
                 onTap: () {
                   _pageCtrl.animateToPage(i,
@@ -1460,8 +1425,7 @@ class _PhoneShowcaseSectionState extends State<PhoneShowcaseSection>
                 borderRadius: BorderRadius.circular(36),
                 boxShadow: [
                   BoxShadow(
-                    color: Color(_screens[_currentPage]['color'] as int)
-                        .withOpacity(0.15),
+                    color: _kColors[_currentPage].withOpacity(0.15),
                     blurRadius: 60,
                     spreadRadius: 10,
                   ),
@@ -1476,8 +1440,7 @@ class _PhoneShowcaseSectionState extends State<PhoneShowcaseSection>
                 borderRadius: BorderRadius.circular(36),
                 color: AppTheme.surface,
                 border: Border.all(
-                  color: Color(_screens[_currentPage]['color'] as int)
-                      .withOpacity(0.35),
+                  color: _kColors[_currentPage].withOpacity(0.35),
                   width: 2,
                 ),
               ),
@@ -1506,9 +1469,21 @@ class _PhoneShowcaseSectionState extends State<PhoneShowcaseSection>
                         controller: _pageCtrl,
                         onPageChanged: (i) =>
                             setState(() => _currentPage = i),
-                        itemCount: _screens.length,
-                        itemBuilder: (_, i) =>
-                            _buildScreen(_screens[i]),
+                        itemCount: _kCount,
+                        itemBuilder: (_, i) {
+                          switch (i) {
+                            case 0:
+                              return const _DSCScreen();
+                            case 1:
+                              return const _ESignScreen();
+                            case 2:
+                              return const _OTPScreen();
+                            case 3:
+                              return const _FoodScreen();
+                            default:
+                              return const _TVScreen();
+                          }
+                        },
                       ),
                     ),
                     // Home bar
@@ -1547,140 +1522,925 @@ class _PhoneShowcaseSectionState extends State<PhoneShowcaseSection>
     );
   }
 
-  Widget _buildScreen(Map<String, dynamic> app) {
-    final color = Color(app['color'] as int);
-    final tags = List<String>.from(app['tags'] ?? []);
+}
 
+// ──────────────────── Phone showcase: shared helpers ──────────────────────────
+
+Widget _psStatusBar() => Padding(
+      padding: const EdgeInsets.fromLTRB(10, 6, 10, 0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text('9:41',
+              style: GoogleFonts.jetBrainsMono(
+                  fontSize: 7, color: AppTheme.textMuted)),
+          Row(children: [
+            Icon(Icons.signal_cellular_alt,
+                size: 8, color: AppTheme.textMuted),
+            const SizedBox(width: 2),
+            Icon(Icons.wifi, size: 8, color: AppTheme.textMuted),
+            const SizedBox(width: 2),
+            Icon(Icons.battery_full, size: 8, color: AppTheme.textMuted),
+          ]),
+        ],
+      ),
+    );
+
+Widget _psHeader(String icon, String title, Color color) => Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+            colors: [color.withOpacity(0.18), color.withOpacity(0.04)]),
+      ),
+      child: Row(children: [
+        Text(icon, style: const TextStyle(fontSize: 13)),
+        const SizedBox(width: 6),
+        Text(title,
+            style: GoogleFonts.syne(
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                color: AppTheme.textPrimary)),
+        const Spacer(),
+        CircleAvatar(
+          radius: 9,
+          backgroundColor: color.withOpacity(0.2),
+          child: Text('A',
+              style:
+                  GoogleFonts.jetBrainsMono(fontSize: 7, color: color)),
+        ),
+      ]),
+    );
+
+Widget _psBottomNav(
+        List<IconData> icons, int active, Color color) =>
+    Container(
+      height: 34,
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        border: Border(top: BorderSide(color: AppTheme.border)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: icons
+            .asMap()
+            .entries
+            .map((e) => Icon(e.value,
+                size: 14,
+                color: e.key == active ? color : AppTheme.textMuted))
+            .toList(),
+      ),
+    );
+
+// ──────────────────── Screen 1: Capricorn DSC Portal ─────────────────────────
+
+class _DSCScreen extends StatelessWidget {
+  const _DSCScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    const color = Color(0xFF00D4FF);
     return Container(
       color: AppTheme.bg,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Status bar
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('9:41',
-                  style: GoogleFonts.jetBrainsMono(
-                      fontSize: 7, color: AppTheme.textMuted)),
-              Row(children: [
-                Icon(Icons.signal_cellular_alt,
-                    size: 9, color: AppTheme.textMuted),
-                const SizedBox(width: 2),
-                Icon(Icons.wifi, size: 9, color: AppTheme.textMuted),
-                const SizedBox(width: 2),
-                Icon(Icons.battery_full,
-                    size: 9, color: AppTheme.textMuted),
-              ]),
-            ],
-          ),
-          const SizedBox(height: 10),
-          // App header card
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  color.withOpacity(0.18),
-                  color.withOpacity(0.04)
+          _psStatusBar(),
+          _psHeader('📋', 'DSC Portal', color),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Status card
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 7),
+                    decoration: BoxDecoration(
+                      color: AppTheme.surface,
+                      borderRadius: BorderRadius.circular(8),
+                      border:
+                          Border.all(color: color.withOpacity(0.3)),
+                    ),
+                    child: Row(children: [
+                      Container(
+                          width: 6,
+                          height: 6,
+                          decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: AppTheme.green)),
+                      const SizedBox(width: 6),
+                      Text('DSC Status',
+                          style: GoogleFonts.jetBrainsMono(
+                              fontSize: 7.5,
+                              color: AppTheme.textMuted)),
+                      const Spacer(),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                            color: AppTheme.greenDim,
+                            borderRadius: BorderRadius.circular(10)),
+                        child: Text('Active ✓',
+                            style: GoogleFonts.jetBrainsMono(
+                                fontSize: 7,
+                                color: AppTheme.green)),
+                      ),
+                    ]),
+                  ),
+                  const SizedBox(height: 10),
+                  Text('Application Progress',
+                      style: GoogleFonts.jetBrainsMono(
+                          fontSize: 7, color: AppTheme.textMuted)),
+                  const SizedBox(height: 7),
+                  // Stepper
+                  Row(children: [
+                    _step('Doc', color),
+                    Expanded(
+                        child: Container(
+                            height: 1,
+                            margin: const EdgeInsets.only(bottom: 12),
+                            color: color.withOpacity(0.5))),
+                    _step('KYC', color),
+                    Expanded(
+                        child: Container(
+                            height: 1,
+                            margin: const EdgeInsets.only(bottom: 12),
+                            color: color.withOpacity(0.5))),
+                    _step('Pay', color),
+                    Expanded(
+                        child: Container(
+                            height: 1,
+                            margin: const EdgeInsets.only(bottom: 12),
+                            color: color.withOpacity(0.5))),
+                    _step('DSC', color),
+                  ]),
+                  const SizedBox(height: 10),
+                  // Payment card
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppTheme.surface2,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: AppTheme.border),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Payment Summary',
+                            style: GoogleFonts.jetBrainsMono(
+                                fontSize: 7,
+                                color: AppTheme.textMuted)),
+                        const SizedBox(height: 3),
+                        Text('₹ 1,200.00',
+                            style: GoogleFonts.syne(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                                color: AppTheme.textPrimary)),
+                        const SizedBox(height: 4),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 5, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: color.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(3),
+                            border: Border.all(
+                                color: color.withOpacity(0.3)),
+                          ),
+                          child: Text('via RazorPay',
+                              style: GoogleFonts.jetBrainsMono(
+                                  fontSize: 7, color: color)),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  // CTA
+                  Container(
+                    height: 30,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                          colors: [color, color.withOpacity(0.7)]),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Center(
+                        child: Text('View Certificate  →',
+                            style: GoogleFonts.jetBrainsMono(
+                                fontSize: 8,
+                                fontWeight: FontWeight.w700,
+                                color: AppTheme.bg))),
+                  ),
                 ],
               ),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: color.withOpacity(0.3)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(app['icon'] as String,
-                    style: const TextStyle(fontSize: 22)),
-                const SizedBox(height: 6),
-                Text(
-                  app['name'] as String,
-                  style: GoogleFonts.syne(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: AppTheme.textPrimary),
-                  maxLines: 2,
-                ),
-                const SizedBox(height: 2),
-                Text(app['category'] as String,
-                    style: GoogleFonts.jetBrainsMono(
-                        fontSize: 8, color: color)),
-              ],
             ),
           ),
-          const SizedBox(height: 10),
-          // Fake UI skeleton rows
-          ...List.generate(3, (i) {
-            final widths = [0.9, 0.7, 0.8];
-            return Container(
-              margin: const EdgeInsets.only(bottom: 6),
-              height: 8,
-              child: FractionallySizedBox(
-                widthFactor: widths[i],
-                alignment: Alignment.centerLeft,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: AppTheme.surface2,
-                    borderRadius: BorderRadius.circular(4),
+          _psBottomNav([
+            Icons.home_rounded,
+            Icons.badge_rounded,
+            Icons.payment_rounded,
+            Icons.person_rounded
+          ], 1, color),
+        ],
+      ),
+    );
+  }
+
+  Widget _step(String label, Color color) => Column(children: [
+        Container(
+          width: 18,
+          height: 18,
+          decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: color,
+              border: Border.all(color: color)),
+          child: const Icon(Icons.check, size: 10, color: AppTheme.bg),
+        ),
+        const SizedBox(height: 2),
+        Text(label,
+            style: GoogleFonts.jetBrainsMono(fontSize: 6, color: color)),
+      ]);
+}
+
+// ──────────────────── Screen 2: eSign.Digital ────────────────────────────────
+
+class _ESignScreen extends StatelessWidget {
+  const _ESignScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    const color = Color(0xFF00FF88);
+    return Container(
+      color: AppTheme.bg,
+      child: Column(
+        children: [
+          _psStatusBar(),
+          _psHeader('✍️', 'eSign.Digital', color),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Document preview
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppTheme.surface,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: AppTheme.border),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('AGREEMENT.pdf',
+                            style: GoogleFonts.jetBrainsMono(
+                                fontSize: 7, color: color)),
+                        const SizedBox(height: 7),
+                        ...[0.95, 0.80, 0.90, 0.65, 0.85, 0.70]
+                            .map((w) => Container(
+                                  height: 5,
+                                  margin:
+                                      const EdgeInsets.only(bottom: 4),
+                                  child: FractionallySizedBox(
+                                    widthFactor: w,
+                                    alignment: Alignment.centerLeft,
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        color: AppTheme.textMuted
+                                            .withOpacity(0.25),
+                                        borderRadius:
+                                            BorderRadius.circular(2),
+                                      ),
+                                    ),
+                                  ),
+                                ))
+                            .toList(),
+                      ],
+                    ),
                   ),
-                ),
-              ),
-            );
-          }),
-          const SizedBox(height: 6),
-          // Fake button
-          Container(
-            height: 28,
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: color.withOpacity(0.3)),
-            ),
-            child: Center(
-              child: Text('Open App',
-                  style: GoogleFonts.jetBrainsMono(
-                      fontSize: 8, color: color)),
-            ),
-          ),
-          const Spacer(),
-          // Tags
-          Wrap(
-            spacing: 4,
-            runSpacing: 4,
-            children: tags
-                .map((t) => Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: AppTheme.surface2,
-                        borderRadius: BorderRadius.circular(3),
-                        border: Border.all(color: AppTheme.border),
-                      ),
-                      child: Text(t,
+                  const SizedBox(height: 8),
+                  // Aadhaar badge
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(6),
+                      border:
+                          Border.all(color: color.withOpacity(0.4)),
+                    ),
+                    child: Row(children: [
+                      const Text('🇮🇳',
+                          style: TextStyle(fontSize: 10)),
+                      const SizedBox(width: 5),
+                      Text('AADHAAR VERIFIED ✓',
                           style: GoogleFonts.jetBrainsMono(
-                              fontSize: 7,
-                              color: AppTheme.textSecondary)),
-                    ))
-                .toList(),
+                              fontSize: 7.5,
+                              fontWeight: FontWeight.w700,
+                              color: color)),
+                    ]),
+                  ),
+                  const SizedBox(height: 8),
+                  Text('Sign with',
+                      style: GoogleFonts.jetBrainsMono(
+                          fontSize: 7, color: AppTheme.textMuted)),
+                  const SizedBox(height: 5),
+                  Row(children: [
+                    _authChip('Face ID', '👁', color, true),
+                    const SizedBox(width: 5),
+                    _authChip('Finger', '⌤', color, false),
+                    const SizedBox(width: 5),
+                    _authChip('IRIS', '◉', color, false),
+                  ]),
+                  const Spacer(),
+                  // Sign CTA
+                  Container(
+                    height: 30,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                          colors: [color, color.withOpacity(0.7)]),
+                      borderRadius: BorderRadius.circular(6),
+                      boxShadow: [
+                        BoxShadow(
+                            color: color.withOpacity(0.3),
+                            blurRadius: 12)
+                      ],
+                    ),
+                    child: Center(
+                        child: Text('✍  Sign Document',
+                            style: GoogleFonts.jetBrainsMono(
+                                fontSize: 8,
+                                fontWeight: FontWeight.w700,
+                                color: AppTheme.bg))),
+                  ),
+                ],
+              ),
+            ),
           ),
-          const SizedBox(height: 6),
-          // Stat badge
+          _psBottomNav([
+            Icons.home_rounded,
+            Icons.description_rounded,
+            Icons.history_rounded,
+            Icons.person_rounded
+          ], 1, color),
+        ],
+      ),
+    );
+  }
+
+  Widget _authChip(
+      String label, String icon, Color color, bool active) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 5),
+        decoration: BoxDecoration(
+          color: active
+              ? color.withOpacity(0.15)
+              : AppTheme.surface2,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(
+              color: active
+                  ? color.withOpacity(0.5)
+                  : AppTheme.border),
+        ),
+        child: Column(children: [
+          Text(icon,
+              style: TextStyle(
+                  fontSize: 12,
+                  color:
+                      active ? color : AppTheme.textMuted)),
+          const SizedBox(height: 2),
+          Text(label,
+              style: GoogleFonts.jetBrainsMono(
+                  fontSize: 5.5,
+                  color: active ? color : AppTheme.textMuted)),
+        ]),
+      ),
+    );
+  }
+}
+
+// ──────────────────── Screen 3: AuthTech OTP (animated) ──────────────────────
+
+class _OTPScreen extends StatefulWidget {
+  const _OTPScreen();
+
+  @override
+  State<_OTPScreen> createState() => _OTPScreenState();
+}
+
+class _OTPScreenState extends State<_OTPScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+
+  static const _accounts = [
+    ['G', 'Google (Work)', '483 291'],
+    ['A', 'Anthropic', '716 834'],
+    ['M', 'Microsoft', '952 047'],
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+        vsync: this, duration: const Duration(seconds: 30))
+      ..repeat();
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const color = Color(0xFFFFAA00);
+    return Container(
+      color: AppTheme.bg,
+      child: Column(
+        children: [
+          _psStatusBar(),
+          _psHeader('🔐', 'AuthTech', color),
+          // Animated OTP ring
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: AnimatedBuilder(
+              animation: _ctrl,
+              builder: (_, __) {
+                final progress = 1.0 - (_ctrl.value % 1.0);
+                return CustomPaint(
+                  size: const Size(86, 86),
+                  painter: _OTPRingPainter(progress, color),
+                  child: SizedBox(
+                    width: 86,
+                    height: 86,
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text('483 291',
+                              style: GoogleFonts.jetBrainsMono(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: color,
+                                  letterSpacing: 3)),
+                          Text('${(progress * 30).toInt()}s',
+                              style: GoogleFonts.jetBrainsMono(
+                                  fontSize: 7,
+                                  color: AppTheme.textMuted)),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          // Account list
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              child: Column(
+                children: _accounts
+                    .map((a) => Container(
+                          margin: const EdgeInsets.only(bottom: 6),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 7),
+                          decoration: BoxDecoration(
+                            color: AppTheme.surface,
+                            borderRadius: BorderRadius.circular(8),
+                            border:
+                                Border.all(color: AppTheme.border),
+                          ),
+                          child: Row(children: [
+                            Container(
+                              width: 24,
+                              height: 24,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: color.withOpacity(0.15),
+                                border: Border.all(
+                                    color: color.withOpacity(0.3)),
+                              ),
+                              child: Center(
+                                  child: Text(a[0],
+                                      style: GoogleFonts.jetBrainsMono(
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.w700,
+                                          color: color))),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                                child: Text(a[1],
+                                    style: GoogleFonts.jetBrainsMono(
+                                        fontSize: 7.5,
+                                        color:
+                                            AppTheme.textSecondary))),
+                            Text(a[2],
+                                style: GoogleFonts.jetBrainsMono(
+                                    fontSize: 8,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppTheme.textPrimary,
+                                    letterSpacing: 2)),
+                          ]),
+                        ))
+                    .toList(),
+              ),
+            ),
+          ),
+          _psBottomNav([
+            Icons.lock_rounded,
+            Icons.add_circle_outline_rounded,
+            Icons.settings_rounded,
+          ], 0, color),
+        ],
+      ),
+    );
+  }
+}
+
+class _OTPRingPainter extends CustomPainter {
+  final double progress;
+  final Color color;
+  const _OTPRingPainter(this.progress, this.color);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = Offset(size.width / 2, size.height / 2);
+    final r = size.width / 2 - 5;
+    canvas.drawCircle(
+        c,
+        r,
+        Paint()
+          ..color = AppTheme.border
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 5);
+    canvas.drawArc(
+        Rect.fromCircle(center: c, radius: r),
+        -3.14159 / 2,
+        2 * 3.14159 * progress,
+        false,
+        Paint()
+          ..color = color
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 5
+          ..strokeCap = StrokeCap.round);
+  }
+
+  @override
+  bool shouldRepaint(_OTPRingPainter old) =>
+      old.progress != progress;
+}
+
+// ──────────────────── Screen 4: My Menu – Food Ordering ──────────────────────
+
+class _FoodScreen extends StatelessWidget {
+  const _FoodScreen();
+
+  static const _cats = [
+    ['🍕', 'Pizza'],
+    ['🍜', 'Noodles'],
+    ['🌮', 'Tacos'],
+    ['🍛', 'Curry'],
+    ['🍣', 'Sushi'],
+  ];
+  static const _restaurants = [
+    ['Spice Garden', '4.6', '1.2 km', '20 min'],
+    ['The Food Hub', '4.4', '0.8 km', '15 min'],
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    const color = Color(0xFFFF4488);
+    return Container(
+      color: AppTheme.bg,
+      child: Column(
+        children: [
+          _psStatusBar(),
           Container(
             padding:
-                const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
             decoration: BoxDecoration(
-              color: AppTheme.greenDim,
-              borderRadius: BorderRadius.circular(4),
-              border:
-                  Border.all(color: AppTheme.green.withOpacity(0.3)),
+              gradient: LinearGradient(colors: [
+                color.withOpacity(0.18),
+                color.withOpacity(0.04)
+              ]),
             ),
-            child: Text(app['stat'] as String,
-                style: GoogleFonts.jetBrainsMono(
-                    fontSize: 7, color: AppTheme.green)),
+            child: Row(children: [
+              const Text('🍽️', style: TextStyle(fontSize: 13)),
+              const SizedBox(width: 6),
+              Text('My Menu',
+                  style: GoogleFonts.syne(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.textPrimary)),
+              const Spacer(),
+              Icon(Icons.location_on_rounded, size: 10, color: color),
+              Text('Noida',
+                  style: GoogleFonts.jetBrainsMono(
+                      fontSize: 7.5, color: color)),
+            ]),
+          ),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Category chips
+                  SizedBox(
+                    height: 52,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: _cats.length,
+                      separatorBuilder: (_, __) =>
+                          const SizedBox(width: 6),
+                      itemBuilder: (_, i) => Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: i == 0
+                              ? color.withOpacity(0.12)
+                              : AppTheme.surface,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                              color: i == 0
+                                  ? color.withOpacity(0.5)
+                                  : AppTheme.border),
+                        ),
+                        child: Column(
+                          mainAxisAlignment:
+                              MainAxisAlignment.center,
+                          children: [
+                            Text(_cats[i][0],
+                                style:
+                                    const TextStyle(fontSize: 14)),
+                            Text(_cats[i][1],
+                                style: GoogleFonts.jetBrainsMono(
+                                    fontSize: 6,
+                                    color: i == 0
+                                        ? color
+                                        : AppTheme.textMuted)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text('Nearby',
+                      style: GoogleFonts.jetBrainsMono(
+                          fontSize: 7.5,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.textSecondary)),
+                  const SizedBox(height: 6),
+                  ..._restaurants
+                      .map((r) => Container(
+                            margin: const EdgeInsets.only(bottom: 7),
+                            padding: const EdgeInsets.all(9),
+                            decoration: BoxDecoration(
+                              color: AppTheme.surface,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                  color: AppTheme.border),
+                            ),
+                            child: Row(children: [
+                              Container(
+                                width: 34,
+                                height: 34,
+                                decoration: BoxDecoration(
+                                  color: color.withOpacity(0.12),
+                                  borderRadius:
+                                      BorderRadius.circular(6),
+                                ),
+                                child: const Center(
+                                    child: Text('🏪',
+                                        style:
+                                            TextStyle(fontSize: 16))),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  children: [
+                                    Text(r[0],
+                                        style: GoogleFonts.syne(
+                                            fontSize: 9,
+                                            fontWeight:
+                                                FontWeight.w700,
+                                            color: AppTheme
+                                                .textPrimary)),
+                                    Row(children: [
+                                      Icon(Icons.star_rounded,
+                                          size: 9,
+                                          color: const Color(
+                                              0xFFFFAA00)),
+                                      const SizedBox(width: 2),
+                                      Text(
+                                          '${r[1]} · ${r[2]} · ${r[3]}',
+                                          style: GoogleFonts
+                                              .jetBrainsMono(
+                                                  fontSize: 6.5,
+                                                  color: AppTheme
+                                                      .textMuted)),
+                                    ]),
+                                  ],
+                                ),
+                              ),
+                              Container(
+                                padding:
+                                    const EdgeInsets.symmetric(
+                                        horizontal: 6,
+                                        vertical: 3),
+                                decoration: BoxDecoration(
+                                  color:
+                                      color.withOpacity(0.12),
+                                  borderRadius:
+                                      BorderRadius.circular(5),
+                                  border: Border.all(
+                                      color:
+                                          color.withOpacity(0.3)),
+                                ),
+                                child: Text('Order',
+                                    style: GoogleFonts.jetBrainsMono(
+                                        fontSize: 6.5,
+                                        fontWeight: FontWeight.w700,
+                                        color: color)),
+                              ),
+                            ]),
+                          ))
+                      .toList(),
+                  const SizedBox(height: 2),
+                  Container(
+                    height: 28,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                          colors: [color, color.withOpacity(0.7)]),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Center(
+                        child: Text('⊡  Scan Table QR',
+                            style: GoogleFonts.jetBrainsMono(
+                                fontSize: 8,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white))),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          _psBottomNav([
+            Icons.home_rounded,
+            Icons.search_rounded,
+            Icons.receipt_long_rounded,
+            Icons.person_rounded
+          ], 0, color),
+        ],
+      ),
+    );
+  }
+}
+
+// ──────────────────── Screen 5: SDSS – Android TV Signage ────────────────────
+
+class _TVScreen extends StatelessWidget {
+  const _TVScreen();
+
+  static const _schedule = [
+    ['10:45 PM', 'Brand_Promo_HD.mp4', '2:30'],
+    ['10:48 PM', 'Product_Launch.mp4', '1:45'],
+    ['10:50 PM', 'Awareness_Loop.mp4', '3:00'],
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    const color = Color(0xFFAA44FF);
+    return Container(
+      color: AppTheme.bg,
+      child: Column(
+        children: [
+          _psStatusBar(),
+          _psHeader('🖥️', 'SDSS · Signage', color),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Now playing
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(colors: [
+                        color.withOpacity(0.2),
+                        color.withOpacity(0.05)
+                      ]),
+                      borderRadius: BorderRadius.circular(10),
+                      border:
+                          Border.all(color: color.withOpacity(0.4)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 5, vertical: 2),
+                            decoration: BoxDecoration(
+                                color: color,
+                                borderRadius:
+                                    BorderRadius.circular(3)),
+                            child: Text('▶ LIVE',
+                                style: GoogleFonts.jetBrainsMono(
+                                    fontSize: 6.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white)),
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                              child: Text(
+                                  'Store_Campaign_V2.mp4',
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.jetBrainsMono(
+                                      fontSize: 7.5,
+                                      color:
+                                          AppTheme.textPrimary))),
+                        ]),
+                        const SizedBox(height: 8),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(3),
+                          child: LinearProgressIndicator(
+                            value: 0.63,
+                            minHeight: 5,
+                            backgroundColor: AppTheme.surface2,
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(color),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                            mainAxisAlignment:
+                                MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text('1:32',
+                                  style: GoogleFonts.jetBrainsMono(
+                                      fontSize: 6.5,
+                                      color: AppTheme.textMuted)),
+                              Text('63%',
+                                  style: GoogleFonts.jetBrainsMono(
+                                      fontSize: 6.5, color: color)),
+                              Text('2:28',
+                                  style: GoogleFonts.jetBrainsMono(
+                                      fontSize: 6.5,
+                                      color: AppTheme.textMuted)),
+                            ]),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text('Up Next',
+                      style: GoogleFonts.jetBrainsMono(
+                          fontSize: 7.5,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.textSecondary)),
+                  const SizedBox(height: 6),
+                  ..._schedule
+                      .map((s) => Container(
+                            margin: const EdgeInsets.only(bottom: 5),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 9, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: AppTheme.surface,
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                  color: AppTheme.border),
+                            ),
+                            child: Row(children: [
+                              SizedBox(
+                                width: 38,
+                                child: Text(s[0],
+                                    style: GoogleFonts.jetBrainsMono(
+                                        fontSize: 6, color: color)),
+                              ),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                  child: Text(s[1],
+                                      overflow:
+                                          TextOverflow.ellipsis,
+                                      style: GoogleFonts.jetBrainsMono(
+                                          fontSize: 7,
+                                          color: AppTheme
+                                              .textSecondary))),
+                              Text(s[2],
+                                  style: GoogleFonts.jetBrainsMono(
+                                      fontSize: 6.5,
+                                      color: AppTheme.textMuted)),
+                            ]),
+                          ))
+                      .toList(),
+                ],
+              ),
+            ),
           ),
         ],
       ),
