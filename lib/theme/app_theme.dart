@@ -160,6 +160,7 @@ class AppData {
   ];
 
   static const List<Map<String, dynamic>> apps = [
+    // ── Capricorn Identity Services ──────────────────────────────────────────
     {
       'icon': '📋', 'name': 'Capricorn Customer App',
       'desc': 'Full-cycle DSC app: document upload, KYC video verification, real-time tracking, RazorPay payments.',
@@ -190,20 +191,75 @@ class AppData {
       'users': 'Google Play', 'rating': 'Live', 'color': 0xFFAA44FF,
       'url': 'https://play.google.com/store/apps/details?id=productcaller.caller.capricorn.CapricornDSCChannel',
     },
-    {
-      'icon': '📺', 'name': 'My Nextra – Online TV',
-      'desc': 'Live TV broadband app with streaming, FCM push notifications, and Sinch SDK voice calls.',
-      'users': 'Google Play', 'rating': 'Live', 'color': 0xFF00D4FF,
-    },
-    {
-      'icon': '🚛', 'name': 'Loadaccess',
-      'desc': 'Logistics management with real-time load tracking and enterprise client integration.',
-      'users': 'Google Play', 'rating': 'Live', 'color': 0xFF00FF88,
-    },
+    // ── Ajath Infotech ───────────────────────────────────────────────────────
     {
       'icon': '🌐', 'name': 'Purpletok',
       'desc': 'Social content platform with Flutter UI, REST API integration and real-time content delivery.',
-      'users': 'Social · Content', 'rating': 'Live', 'color': 0xFFFFAA00,
+      'users': 'Social · Content', 'rating': 'Live', 'color': 0xFF00D4FF,
+    },
+    // ── Altsols IT Services ──────────────────────────────────────────────────
+    {
+      'icon': '💼', 'name': 'Altsols',
+      'desc': 'Company app for Altsols IT Services covering web design, Android/iOS development and digital marketing.',
+      'users': 'Google Play', 'rating': 'Live', 'color': 0xFF00FF88,
+    },
+    {
+      'icon': '🏪', 'name': 'Desi Apps',
+      'desc': 'Cloud-based marketplace connecting real estate advisors, event providers, retailers and wholesalers.',
+      'users': 'Google Play', 'rating': 'Live', 'color': 0xFFFFAA00,
+      'url': 'https://play.google.com/store/apps/details?id=in.altsols.desiapps',
+    },
+    {
+      'icon': '⌚', 'name': 'Wrist Trust',
+      'desc': 'Luxury watch registry for individual and commercial users — report lost, mark found, manage collections.',
+      'users': 'Google Play', 'rating': 'Live', 'color': 0xFFFF4488,
+    },
+    {
+      'icon': '🍽️', 'name': 'My Menu',
+      'desc': 'Restaurant discovery with QR menu scanning, dine-in/takeaway orders, map view and user reviews.',
+      'users': 'Google Play', 'rating': 'Live', 'color': 0xFFAA44FF,
+    },
+    {
+      'icon': '🚛', 'name': 'Loadaccess',
+      'desc': 'Logistics app with location/lane searches, GPS tracking, document generation and order management.',
+      'users': 'Google Play', 'rating': 'Live', 'color': 0xFF00D4FF,
+    },
+    {
+      'icon': '📊', 'name': 'AMS',
+      'desc': 'ERP asset management with barcode scanning, multi-role access (admin/manager/user) and request workflows.',
+      'users': 'Google Play', 'rating': 'Live', 'color': 0xFF00FF88,
+    },
+    {
+      'icon': '🖥️', 'name': 'SDSS',
+      'desc': 'Android TV digital signage app with credential-based login, daily schedules and ExoPlayer playlists.',
+      'users': 'Android TV', 'rating': 'Live', 'color': 0xFFFFAA00,
+    },
+    // ── NuSys Technologies ───────────────────────────────────────────────────
+    {
+      'icon': '🚗', 'name': 'Touch and Glow',
+      'desc': 'Car wash service booking app with FCM push notifications and email alerts for service centers.',
+      'users': 'Google Play', 'rating': 'Live', 'color': 0xFFFF4488,
+    },
+    {
+      'icon': '🍛', 'name': 'Indian Brasserie',
+      'desc': 'Australian restaurant food ordering app with FCM push notifications and Google Maven integration.',
+      'users': 'Google Play', 'rating': 'Live', 'color': 0xFFAA44FF,
+      'url': 'https://play.google.com/store/apps/details?id=au.com.indianbrasserie',
+    },
+    {
+      'icon': '🧹', 'name': 'Green Steams',
+      'desc': 'On-demand car wash (Ola-inspired) with Stripe payments, GPS tracking and dual provider/customer modes.',
+      'users': 'Google Play', 'rating': 'Live', 'color': 0xFF00D4FF,
+    },
+    {
+      'icon': '📺', 'name': 'My Nextra – Online TV',
+      'desc': 'Broadband TV app with live channels, CCTV, Paytm payments, AdMob, FCM and Sinch SDK voice calls.',
+      'users': 'Google Play', 'rating': 'Live', 'color': 0xFF00FF88,
+    },
+    {
+      'icon': '🍺', 'name': 'Restrobar Pro',
+      'desc': 'Restaurant order management for owners: accept/reject orders with delivery assignment and FCM alerts.',
+      'users': 'Google Play', 'rating': 'Live', 'color': 0xFFFFAA00,
     },
   ];
 
